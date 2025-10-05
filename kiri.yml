@@ -1,0 +1,47 @@
+name: KiRI Diff
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  kiri:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2. Instalacja KiCada
+      - name: Install KiCad
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y kicad
+
+      # 3. Pobranie KiRI i dodanie do PATH
+      - name: Install KiRI
+        run: |
+          git clone https://github.com/leoheck/kiri.git
+          echo "$PWD/kiri/bin" >> $GITHUB_PATH
+
+      # 4. Uruchomienie KiRI na wszystkich projektach
+      - name: Run KiRI diff on all projects
+        run: |
+          mkdir -p diff-output 
+          find . -name "*.kicad_pro" | while read proj; do
+            dir=$(dirname "$proj")
+            echo "Running KiRI on $dir"
+            kiri diff testing/new diff-output || echo "Failed on $dir, skipping"
+          done
+
+
+      # 5. Upload artefaktów
+      - name: Upload diff artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiri-diff
+          path: diff-output/
