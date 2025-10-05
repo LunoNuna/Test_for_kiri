@@ -1,34 +1,47 @@
-            - name: Kiri KiCad Diff Action
-  # You may pin to the exact commit or the version.
-  # uses: USA-RedDragon/kiri-github-action@d3553e4310db18a00a412d1982e64aa640f4fa56
-  uses: USA-RedDragon/kiri-github-action@v1.0.30
-  with:
-    # Path to the KiCad project file
-    project-file: # optional
-    # Change output folder path/name
-    output-dir: # optional
-    # Remove generated folder before running it
-    remove: # optional
-    # Archive generated files
-    archive: # optional
-    # Disable page frame for PCB
-    pcb-page-frame: # optional
-    # Force starting with the Layout view selected
-    force-layout-view: # optional
-    # Skip ploting Kicad 6 schematics (.kicad.sch)
-    skip-kicad6-schematics: # optional
-    # Skip usage of -cache.lib on plotgitsch
-    skip-cache: # optional
-    # Show commits starting from this one
-    older: # optional
-    # Show commits up to this one
-    newer: # optional
-    # Show last N commits
-    last: # optional
-    # Include all commits even if schematics/layout don't have changes
-    all: # optional
-    # Extra arguments to pass to Kiri
-    extra-args: # optional
-    # Enable debug mode for Kiri
-    kiri-debug: # optional
-          
+name: KiRI Diff
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  kiri:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2. Instalacja KiCada
+      - name: Install KiCad
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y kicad
+
+      # 3. Pobranie KiRI i dodanie do PATH
+      - name: Install KiRI
+        run: |
+          git clone https://github.com/leoheck/kiri.git
+          echo "$PWD/kiri/bin" >> $GITHUB_PATH
+
+      # 4. Uruchomienie KiRI na wszystkich projektach
+      - name: Run KiRI diff on all projects
+        run: |
+          mkdir -p diff-output 
+          find . -name "*.kicad_pro" | while read proj; do
+            dir=$(dirname "$proj")
+            echo "Running KiRI on $dir"
+            kiri diff testing/new diff-output || echo "Failed on $dir, skipping"
+          done
+
+
+      # 5. Upload artefaktów
+      - name: Upload diff artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiri-diff
+          path: diff-output/
