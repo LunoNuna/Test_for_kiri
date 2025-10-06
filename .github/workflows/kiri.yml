@@ -28,10 +28,14 @@ jobs:
           echo "$PWD/kiri/bin" >> $GITHUB_PATH
 
       # 4. Uruchomienie KiRI na wszystkich projektach
-      - name: Run KiRI diff
+      - name: Run KiRI diff on all projects
         run: |
-          mkdir -p diff-output
-          kiri diff testing/new diff-output
+          mkdir -p diff-output 
+          find . -name "*.kicad_pro" | while read proj; do
+            dir=$(dirname "$proj")
+            echo "Running KiRI on $dir"
+            kiri diff "$dir" "diff-output/$dir" || echo "Failed on $dir, skipping"
+          done
 
       - name: List generated files
         run: ls -R diff-output || echo "No files found"
