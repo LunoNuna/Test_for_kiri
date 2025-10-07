@@ -1,0 +1,10 @@
+git init temp-gh-pages
+cd temp-gh-pages
+touch .nojekyll
+git add .nojekyll
+git commit -m "init gh-pages"
+git branch gh-pages
+git remote add origin https://github.com/LunoNuna/Test_for_kiri
+git push origin HEAD:refs/heads/gh-pages
+cd ..
+rm -rf temp-gh-pages
