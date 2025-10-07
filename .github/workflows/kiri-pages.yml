@@ -1,0 +1,36 @@
+name: KiRI Pages (publish)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.kicad_pcb'
+      - '**/*.kicad_sch'
+      - '**/*.kicad_pro'
+      - '**/*.kicad_sym'
+
+permissions:
+  contents: write   # potrzebne do tworzenia/aktualizacji gałęzi gh-pages
+  pages: write      # potrzebne by uruchomić Pages deploy
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Run KiRI and output to ./kiri-output
+        uses: USA-RedDragon/kiri-github-action@v1
+        with:
+          output-dir: ./kiri-output
+          # optional:
+          # project-file: path/to/project.kicad_pro
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./kiri-output
