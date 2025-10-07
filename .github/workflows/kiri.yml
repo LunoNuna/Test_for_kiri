@@ -34,14 +34,14 @@ jobs:
           find . -name "*.kicad_pro" | while read proj; do
             dir=$(dirname "$proj")
             echo "Running KiRI on $dir"
-            kiri diff testing/new diff-output || echo "Failed on $dir, skipping"
+            kiri diff "$dir" "diff-output/$dir" || echo "Failed on $dir, skipping"
           done
 
+      - name: List generated files
+        run: ls -R diff-output || echo "No files found"
 
-      # 5. Upload artefaktów
       - name: Upload diff artifacts
-        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: kiri-diff
-          path: diff-output/
+          name: kiri-diffs
+          path: diff-output/**
