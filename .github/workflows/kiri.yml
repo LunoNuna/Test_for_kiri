@@ -16,8 +16,8 @@ jobs:
       - name: Run KiRI
         uses: USA-RedDragon/kiri-github-action@v2
         with:
-          search_path: ./        # Szuka projektów w całym repo
-          output_path: ./output  # Tu zapisze wygenerowane pliki
+          project-file: ./           # repo lub katalog z plikami .kicad_pro
+          output-dir: ./output       # gdzie zapisać wygenerowane pliki
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
