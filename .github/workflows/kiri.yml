@@ -1,47 +1,26 @@
-name: KiRI Diff
+name: KiCad Preview with KiRI
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  kiri:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # 2. Instalacja KiCada
-      - name: Install KiCad
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y kicad
-
-      # 3. Pobranie KiRI i dodanie do PATH
-      - name: Install KiRI
-        run: |
-          git clone https://github.com/leoheck/kiri.git
-          echo "$PWD/kiri/bin" >> $GITHUB_PATH
-
-      # 4. Uruchomienie KiRI na wszystkich projektach
-      - name: Run KiRI diff on all projects
-        run: |
-          mkdir -p diff-output 
-          find . -name "*.kicad_pro" | while read proj; do
-            dir=$(dirname "$proj")
-            echo "Running KiRI on $dir"
-            kiri diff testing/new diff-output || echo "Failed on $dir, skipping"
-          done
-
-
-      # 5. Upload artefaktów
-      - name: Upload diff artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+      - name: Run KiRI
+        uses: USA-RedDragon/kiri-github-action@v1
         with:
-          name: kiri-diff
-          path: diff-output/
+          search_path: ./        # Szuka projektów w całym repo
+          output_path: ./output  # Tu zapisze wygenerowane pliki
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output  # Folder publikacji
